@@ -24,7 +24,7 @@ if ( is_woocommerce_active() ) {
 	 * */
 	load_plugin_textdomain( 'wc_bulk_variations', false, dirname( plugin_basename( __FILE__ ) ) . '/' );
 
-	class WC_Bulk_Variations {
+	class Cultura_WC_Bulk_Variations {
 
 		/** URLS ***************************************************************** */
 		var $plugin_url;
@@ -309,16 +309,16 @@ if ( is_woocommerce_active() ) {
 			}
 		}
 
-	}
+		/** Function Added: if exits role -- 03/02/2016 **/
+		function role_exists( $role ) {
+		  if( ! empty( $role ) ) {
+		    return $GLOBALS['wp_roles']->is_role( $role );
+		  }
+		  return false;
+		}
 
-	/** Function Added: if exits role -- 03/02/2016 **/
-	function role_exists( $role ) {
-	  if( ! empty( $role ) ) {
-	    return $GLOBALS['wp_roles']->is_role( $role );
-	  }
-	  return false;
 	}
-
-	$GLOBALS['wc_bulk_variations'] = new WC_Bulk_Variations();
+	
+	$GLOBALS['wc_bulk_variations'] = new Cultura_WC_Bulk_Variations();
 }
 ?>
