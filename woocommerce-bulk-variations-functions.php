@@ -1,38 +1,27 @@
 <?php
-
+/** Remove column variable -- 03/02/2016 **/
 class WC_Bulk_Variation_Array_Filter {
 
 	private $available_variations;
 	public $matched = array();
 	public $row_attribute_name;
-	public $column_attribute_name;
 	public $row_value = '';
-	public $column_value = '';
 
-	public function __construct( $row_attribute_name, $column_attribute_name, $avaialble_variations ) {
+	public function __construct( $row_attribute_name, $avaialble_variations ) {
 		$this->row_attribute_name = $row_attribute_name;
-		$this->column_attribute_name = $column_attribute_name;
 		$this->available_variations = $avaialble_variations;
 	}
 
-	public function get_matches( $row_value, $column_value ) {
-		$this->matched = array(0 => false, 1 => false, 2 => false);
+	public function get_matches( $row_value ) {
+		$this->matched = array(0 => false, 1 => false );
 
 		foreach ( $this->available_variations as $variation ) {
-			if ( $variation['attributes'][$this->row_attribute_name] == $row_value && $variation['attributes'][$this->column_attribute_name] == $column_value ) {
+			if ( $variation['attributes'][$this->row_attribute_name] == $row_value ) {
 				$this->matched[0] = $variation;
 			}
 
-			if ( $variation['attributes'][$this->row_attribute_name] == $row_value && empty( $variation['attributes'][$this->column_attribute_name] ) ) {
+			if ( empty( $variation['attributes'][$this->row_attribute_name] ) ) {
 				$this->matched[1] = $variation;
-			}
-
-			if ( $variation['attributes'][$this->column_attribute_name] == $column_value && empty( $variation['attributes'][$this->row_attribute_name] ) ) {
-				$this->matched[1] = $variation;
-			}
-
-			if ( empty( $variation['attributes'][$this->row_attribute_name] ) && empty( $variation['attributes'][$this->column_attribute_name] ) ) {
-				$this->matched[2] = $variation;
 			}
 		}
 
@@ -42,6 +31,7 @@ class WC_Bulk_Variation_Array_Filter {
 
 }
 
+/** Modified Function - create matrix for row (sanitize_title) -- 03/02/2016 **/
 function woocommerce_bulk_variations_create_matrix( $post_id ) {
 	// 2.0 Compat
 	if ( function_exists( 'get_product' ) )
@@ -51,8 +41,13 @@ function woocommerce_bulk_variations_create_matrix( $post_id ) {
 
 	$attributes = $_product->get_attributes();
 
-	$row_attribute = (get_post_meta( $post_id, '_bv_y', true ));
-	$column_attribute = (get_post_meta( $post_id, '_bv_x', true ));
+	//Get first attribute -- 03/02/2016
+	if( is_array( $attributes ) && count( $attributes ) > 0 ){
+		foreach( $attributes as $att ){
+			$row_attribute = $att['name'];
+			break;
+		}
+	}
 
 	$av_temp = $_product->get_variation_attributes();
 
@@ -69,51 +64,31 @@ function woocommerce_bulk_variations_create_matrix( $post_id ) {
 		$av[$row_attribute] = $av_temp[$row_attribute];
 	}
 
-	if ( isset( $attributes[$column_attribute] ) && $attributes[$column_attribute]['is_taxonomy'] ) {
-		$column_term_values = WC_Bulk_Variations_Compatibility::wc_get_product_terms( $post_id, $column_attribute, 'all' );
-
-		foreach ( $column_term_values as $column_term_value ) {
-			if ( in_array( $column_term_value->slug, $av_temp[$column_attribute] ) ) {
-				$av[$column_attribute][] = $column_term_value->slug;
-			}
-		}
-	} else {
-		$av[$column_attribute] = $av_temp[$column_attribute];
-	}
-
-
 	$grid = array();
 	foreach ( $av[$row_attribute] as $row_value ) {
-		foreach ( $av[$column_attribute] as $column_value ) {
-			$grid[ sanitize_title( $row_value ) ][ sanitize_title( $column_value ) ] = null;
-		}
+		$grid[ sanitize_title( $row_value ) ] = null;
 	}
 
-	
 	//Now sanitize the attributes, since $product->get_available_variations returns the variations sanitized, but get_variation_attributes does not
 	$row_attribute = sanitize_title( $row_attribute );
-	$column_attribute = sanitize_title( $column_attribute );
 
 	$pv = $_product->get_available_variations();
-	$filter = new WC_Bulk_Variation_Array_Filter( 'attribute_' . $row_attribute, 'attribute_' . $column_attribute, $pv );
+	$filter = new WC_Bulk_Variation_Array_Filter( 'attribute_' . $row_attribute, $pv );
 
-	foreach ( $grid as $row_key => &$column ) {
-		foreach ( $column as $column_key => &$field_value ) {
-			$field_value = $filter->get_matches( $row_key, $column_key );
-		}
+	foreach ( $grid as $row_key => &$field_value ) {
+		$field_value = $filter->get_matches( $row_key );
 	}
 
 	$matrix_data = array(
 	    'row_attribute' => $row_attribute,
-	    'column_attribute' => $column_attribute,
-	    'matrix_columns' => array_values( $av[(get_post_meta( $post_id, '_bv_x', true ))] ),
-	    'matrix_rows' => array_values( $av[(get_post_meta( $post_id, '_bv_y', true ))] ),
+	    'matrix_rows' => array_values( $av[$row_attribute] ),
 	    'matrix' => $grid
 	);
 
 	return $matrix_data;
 }
 
+/** Modified Function - create matrix for row -- 03/02/2016 **/
 function woocommerce_bulk_variations_create_matrix_v24($post_id){
 	// 2.0 Compat
 	if ( function_exists( 'get_product' ) )
@@ -123,8 +98,13 @@ function woocommerce_bulk_variations_create_matrix_v24($post_id){
 
 	$attributes = $_product->get_attributes();
 
-	$row_attribute = (get_post_meta( $post_id, '_bv_y', true ));
-	$column_attribute = (get_post_meta( $post_id, '_bv_x', true ));
+	//Get first attribute -- 03/02/2016
+	if( is_array( $attributes ) && count( $attributes ) > 0 ){
+		foreach( $attributes as $att ){
+			$row_attribute = $att['name'];
+			break;
+		}
+	}
 
 	$av_temp = $_product->get_variation_attributes();
 
@@ -141,50 +121,30 @@ function woocommerce_bulk_variations_create_matrix_v24($post_id){
 		$av[$row_attribute] = $av_temp[$row_attribute];
 	}
 
-	if ( isset( $attributes[$column_attribute] ) && $attributes[$column_attribute]['is_taxonomy'] ) {
-		$column_term_values = WC_Bulk_Variations_Compatibility::wc_get_product_terms( $post_id, $column_attribute, 'all' );
-
-		foreach ( $column_term_values as $column_term_value ) {
-			if ( in_array( $column_term_value->slug, $av_temp[$column_attribute] ) ) {
-				$av[$column_attribute][] = $column_term_value->slug;
-			}
-		}
-	} else {
-		$av[$column_attribute] = $av_temp[$column_attribute];
-	}
-
-
 	$grid = array();
 	foreach ( $av[$row_attribute] as $row_value ) {
-		foreach ( $av[$column_attribute] as $column_value ) {
-			$grid[ ( $row_value ) ][ ( $column_value ) ] = null;
-		}
+		$grid[ ( $row_value ) ] = null;
 	}
 
-	
 	//Now sanitize the attributes, since $product->get_available_variations returns the variations sanitized, but get_variation_attributes does not
 	$row_attribute = sanitize_title( $row_attribute );
-	$column_attribute = sanitize_title( $column_attribute );
 
 	$pv = $_product->get_available_variations();
-	$filter = new WC_Bulk_Variation_Array_Filter( 'attribute_' . $row_attribute, 'attribute_' . $column_attribute, $pv );
+	$filter = new WC_Bulk_Variation_Array_Filter( 'attribute_' . $row_attribute, $pv );
 
-	foreach ( $grid as $row_key => &$column ) {
-		foreach ( $column as $column_key => &$field_value ) {
-			$field_value = $filter->get_matches( $row_key, $column_key );
-		}
+	foreach ( $grid as $row_key => &$field_value ) {
+		$field_value = $filter->get_matches( $row_key );
 	}
 
 	$matrix_data = array(
 	    'row_attribute' => $row_attribute,
-	    'column_attribute' => $column_attribute,
-	    'matrix_columns' => array_values( $av[(get_post_meta( $post_id, '_bv_x', true ))] ),
-	    'matrix_rows' => array_values( $av[(get_post_meta( $post_id, '_bv_y', true ))] ),
+	    'matrix_rows' => array_values( $av[$row_attribute] ),
 	    'matrix' => $grid
 	);
 
 	return $matrix_data;
 }
+
 
 function woocommerce_bulk_variations_get_title( $taxonomy, $value ) {
 	global $product;

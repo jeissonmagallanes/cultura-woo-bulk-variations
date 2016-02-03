@@ -25,24 +25,31 @@
 				var width = 0;
 
 				$('.btn-single').click(function() {
-					$('form.variations_form').slideDown();
+					/** Modified displayed -- 03/02/2016 **/
+					$('#matrix_form').slideUp('200', function() {
+						$('form.variations_form').slideDown('400', function() {
+						});
+					});
+					/****/
 				});
 
 				$('.btn-back-to-single').click(function() {
+					/** Modified displayed -- 03/02/2016 **/
 					$('#matrix_form').slideUp('200', function() {
-						$('div.product').slideDown('400', function() {
-							$('.variations_form').slideDown();
+						$('form.variations_form').slideDown('400', function() {
 						});
 					});
+					/****/
 				});
 
 				$('.btn-bulk').click(function() {
-					$('div.product').slideUp('200', function() {
-						$('.variations_form').hide();
+					/** Modified displayed -- 03/02/2016 **/
+					$('form.variations_form').slideUp('200', function() {
 						$('#matrix_form').slideDown('400', function() {
 							$('#qty_input_0').focus();
 						});
 					});
+					/****/
 
 				});
 
@@ -51,25 +58,7 @@
 					var $tr = $(this).closest('tr');
 					$('td', '#matrix_form_table').removeClass('active');
 					$(this).closest('td').addClass('active');
-					var cols = $(this).closest('tr').find('td').length;
-
-					if (!info_row) {
-						info_row = $('<tr class="info-row"><td id="info_cell" colspan="' + cols + '"></td></tr>').insertBefore($tr);
-					} else {
-						if (info_row_index != $tr.data('index')) {
-							info_row_index = $tr.data('index');
-							info_row.insertBefore($tr);
-						}
-					}
-					var info_box_id = '#' + $(this).attr('id') + '_info';
-
-					if (info_box) {
-						//move it back into storage
-						info_box.appendTo('#matrix_form_info_holder');
-					}
-
-					info_box = $(info_box_id);
-					info_box.appendTo($('#info_cell'));
+					/** Remove effect click input (no displayed info product) **/
 				});
 
 

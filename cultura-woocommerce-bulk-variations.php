@@ -1,17 +1,10 @@
 <?php
 /*
-  Plugin Name: WooCommerce Bulk Variations
-  Plugin URI: http://woothemes.com/woocommerce
-  Description: WooCommerce Bulk Variations allows your shoppers to add more than one variation at a time to the cart.  Great for wholesales, B2B sites, and for easing the process of adding more than one variation at a time for anyone.
-  Version: 1.3.5
-  Author: Lucas Stark
-  Author URI: http://lucasstark.com
-  Requires at least: 3.1
-  Tested up to: 3.3
-
-  Copyright: © 2009-2012 Lucas Stark.
-  License: GNU General Public License v3.0
-  License URI: http://www.gnu.org/licenses/gpl-3.0.html
+  Plugin Name: Cultura - WooCommerce Bulk Variations
+  Description: WooCommerce Bulk Variations allows your shoppers to add more than one variation at a time to the cart.  Great for wholesales.
+  Version: 1.0
+  Author: Cultura Interactive
+  Author URI: http://culturainteractive.com/
  */
 
 /**
@@ -44,9 +37,10 @@ if ( is_woocommerce_active() ) {
 			require 'class-wc-bulk-variations-compatibility.php';
 
 			if ( is_admin() && ( $pagenow == 'post-new.php' || $pagenow == 'post.php' || $pagenow == 'edit.php' ) ) {
-
-				require 'woocommerce-bulk-variations-admin.php';
-				$this->admin = new WC_Bulk_Variations_Admin();
+				/** Remove Admin Plugin -- 03/02/2016 **/
+				//require 'woocommerce-bulk-variations-admin.php';
+				//$this->admin = new WC_Bulk_Variations_Admin();
+				/****/
 			} elseif ( !is_admin() ) {
 
 				require 'woocommerce-bulk-variations-functions.php';
@@ -54,9 +48,10 @@ if ( is_woocommerce_active() ) {
 				add_action( 'template_redirect', array(&$this, 'on_template_redirect'), 99 );
 
 				//Register the hook to render the bulk form as late as possibile
-				add_action( 'woocommerce_before_single_product', array(&$this, 'render_bulk_form'), 999 );
-
-				add_action( 'wc_quick_view_before_single_product', array(&$this, 'render_bulk_form'), 999 );
+				/** change position to form another section -> Hook woocommerce_before_add_to_cart_form -- 03/02/2016  **/
+				add_action( 'woocommerce_before_add_to_cart_form', array(&$this, 'render_bulk_form'), 999 );
+				add_action( 'woocommerce_before_add_to_cart_form', array(&$this, 'render_bulk_form'), 999 );
+				/****/
 
 				add_action( 'woocommerce_before_add_to_cart_form', array(&$this, 'before_add_to_cart_form') );
 				add_action( 'woocommerce_after_add_to_cart_button', array(&$this, 'after_add_to_cart_button') );
@@ -71,7 +66,9 @@ if ( is_woocommerce_active() ) {
 		}
 
 		public function set_is_quick_view() {
-			$bv_type = get_post_meta( get_the_ID(), '_bv_type', true );
+			/** Set value default to matrix -- 03/02/2016 **/
+			$bv_type = 'matrix';
+			/****/
 			$this->is_quick_view = !empty( $bv_type );
 		}
 
@@ -82,8 +79,17 @@ if ( is_woocommerce_active() ) {
 				return false;
 			}
 
-			if ( !is_product() || !get_post_meta( $post->ID, '_bv_type', true ) ) {
+			/** Remove validation (_bv_type) -- 03/02/2016 **/
+			if ( !is_product() ) {
 				return false;
+			}
+			/****/
+
+			/** Validate if exits role -- 03/02/2016 **/
+			if( $this->role_exists( 'wholesale_customer' ) ) {
+				if( !current_user_can( 'wholesale_customer' ) ){
+					return false;
+				}
 			}
 
 			// 2.0 Compat
@@ -137,13 +143,7 @@ if ( is_woocommerce_active() ) {
 		}
 
 		public function before_add_to_cart_form() {
-
-			if ( $this->is_bulk_variation_form() || $this->is_quick_view ) {
-				?>
-				<input class="button btn-bulk" type="button" value="<?php _e( 'Bulk Order Form', 'wc_bulk_variations' ); ?>"  />
-				<input class="button btn-single" type="button" value="<?php _e( 'Singular Order Form', 'wc_bulk_variations' ); ?>" />
-				<?php
-			}
+			/** Remove Buttons -- 03/02/2016 **/
 		}
 
 		public function after_add_to_cart_button() {
@@ -309,6 +309,14 @@ if ( is_woocommerce_active() ) {
 			}
 		}
 
+	}
+
+	/** Function Added: if exits role -- 03/02/2016 **/
+	function role_exists( $role ) {
+	  if( ! empty( $role ) ) {
+	    return $GLOBALS['wp_roles']->is_role( $role );
+	  }
+	  return false;
 	}
 
 	$GLOBALS['wc_bulk_variations'] = new WC_Bulk_Variations();

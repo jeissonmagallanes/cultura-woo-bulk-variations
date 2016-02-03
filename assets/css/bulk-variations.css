@@ -1,7 +1,11 @@
-
-form.is_bulk.variations_form, div#matrix_form {
-	display:none;
+/** Modified Style display -- 03/02/2016 **/
+form.is_bulk.variations_form{
+	display: none;
 }
+div#matrix_form {
+	display:block;
+}
+/*****/
 
 #matrix_form_table, #matrix_form_table thead tr th, #matrix_form_table tbody tr td {
 	margin: 0;

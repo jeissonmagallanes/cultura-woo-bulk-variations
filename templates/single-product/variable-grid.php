@@ -1,4 +1,5 @@
 <?php
+/** Remove column variable -- 03/02/2016 **/
 global $woocommerce, $wc_bulk_variations, $post;
 
 //Build the matrix data
@@ -9,14 +10,11 @@ if ( WC_Bulk_Variations_Compatibility::is_wc_version_gte_2_4() ) {
 }
 
 $matrix = $matrix_data['matrix'];
-$matrix_columns = $matrix_data['matrix_columns'];
 $matrix_rows = $matrix_data['matrix_rows'];
 $row_attribute = $matrix_data['row_attribute'];
-$column_attribute = $matrix_data['column_attribute'];
 
 //Set up some locals
 $row_index = 0;
-$column_index = 0;
 $cell_index = 0;
 $info_boxes = array();
 ?>
@@ -25,34 +23,17 @@ $info_boxes = array();
 
 
 <div id="matrix_form">
-	<div class="summary">
-		<?php woocommerce_template_single_title(); ?>
-		<?php woocommerce_template_single_price(); ?>
-		<?php woocommerce_template_single_excerpt(); ?>
-	</div>
+
 	<form id="wholesale_form" action="" class="bulk_variations_form cart matrix" method="post" enctype='multipart/form-data'>
 		<table id="matrix_form_table">
 			<thead>
-				<tr>
-					<th></th>
-					<?php foreach ( $matrix_columns as $column ) : ?>
-						<th><?php echo woocommerce_bulk_variations_get_title( $column_attribute, $column ); ?></th>
-					<?php endforeach; ?>
-					<?php if ( $wc_bulk_variations->get_setting( 'use_quantity_selectors', false ) ) : ?>
-						<th></th>
-					<?php endif; ?>
-				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ( $matrix as $row => $columns ) : ?>
-					<?php $column_index = 0; ?>
+				<?php foreach ( $matrix as $row => $field_data ) : ?>
 					<tr class="<?php echo $row_index % 2 == 0 ? '' : 'alt'; ?>" data-index="<?php echo $row_index; ?>">
 						<td class="row-label"><?php echo woocommerce_bulk_variations_get_title( $row_attribute, $matrix_rows[$row_index] ); ?></td>
 
-						<?php foreach ( $columns as $key => $field_data ): ?>
-							<?php $column_index++; ?>
 							<?php $variation = new WC_Product_Variation( $field_data['variation_id'] ); ?>
-
 
 							<?php
 							$managing_stock = $variation->manage_stock;
@@ -81,11 +62,10 @@ $info_boxes = array();
 										<p><?php echo $field_data['price_html']; ?></p>
 									<?php endif; ?>
 
-									<?php $info_boxes['qty_input_' . $cell_index . '_info'] = array($row_attribute => $row, $column_attribute => $key, 'variation_data' => $field_data, 'variation' => $variation); ?>
-
+									<?php $info_boxes['qty_input_' . $cell_index . '_info'] = array($row_attribute => $row, 'variation_data' => $field_data, 'variation' => $variation); ?>
 
 									<input type="hidden" name="order_info[<?php echo $cell_index; ?>][variation_id]" value="<?php echo $field_data['variation_id']; ?>" />
-									<input type="hidden" name="order_info[<?php echo $cell_index; ?>][variation_data][attribute_<?php echo $column_attribute; ?>]" value="<?php echo $key; ?>" />
+									<input type="hidden" name="order_info[<?php echo $cell_index; ?>][variation_data]" value="<?php echo $key; ?>" />
 									<input type="hidden" name="order_info[<?php echo $cell_index; ?>][variation_data][attribute_<?php echo $row_attribute; ?>]" value="<?php echo $row; ?>" />
 								<?php else : ?>
 
@@ -93,11 +73,8 @@ $info_boxes = array();
 							</td>
 							<?php
 							$cell_index++;
-							$column_index++;
 							?>
-						<?php endforeach; ?>
 						<?php if ( $wc_bulk_variations->get_setting( 'use_quantity_selectors', false ) ) : ?>
-							<?php $column_index++; ?>
 							<td width= "32px">
 								<div class="quantity buttons_added">
 									<input type="hidden" name="order_info[<?php echo $cell_index; ?>][quantity]" value="1" />
@@ -115,7 +92,7 @@ $info_boxes = array();
 			</tbody>
 			<tfoot>
 				<tr>
-					<td colspan="<?php echo $column_index + 1; ?>">
+					<td colspan="2">
 						<?php do_action( 'woocommerce_bv_before_add_to_cart_button' ); ?>
 						<button type="submit" class="single_add_to_cart_button button alt"><?php echo apply_filters( 'single_add_to_cart_text', __( 'Add to cart', 'woocommerce' ), 'variable' ); ?></button>
 						<?php do_action( 'woocommerce_bv_after_add_to_cart_button' ); ?>
@@ -145,7 +122,6 @@ $info_boxes = array();
 					<?php echo $variation->get_price_html(); ?>
 					<ul>
 						<li><?php echo WC_Bulk_Variations_Compatibility::wc_attribute_label( $row_attribute ); ?>: <?php echo woocommerce_bulk_variations_get_title( $row_attribute, $field_data[$row_attribute] ); ?></li>
-						<li><?php echo WC_Bulk_Variations_Compatibility::wc_attribute_label( $column_attribute ); ?>: <?php echo woocommerce_bulk_variations_get_title( $column_attribute, $field_data[$column_attribute] ); ?></li>
 
 						<?php if ( $variation->sku ) : ?>
 							<li><?php echo $field_data['variation_data']['sku']; ?></li>
