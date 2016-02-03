@@ -1,6 +1,6 @@
 <?php
 /*
-  Plugin Name: Cultura - WooCommerce Bulk Variations
+  Plugin Name: Cultura - Woo Bulk Variations
   Description: WooCommerce Bulk Variations allows your shoppers to add more than one variation at a time to the cart.  Great for wholesales.
   Version: 1.0
   Author: Cultura Interactive
